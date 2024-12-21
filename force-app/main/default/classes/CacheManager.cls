@@ -1,123 +1,60 @@
 public with sharing class CacheManager {
-    public interface Cacheable {
-        Object get(String key);
-        void put(String key, Object value);
-    }
-
     public interface PlatformCacheable {
         PlatformCacheable partition(String partitionName);
+        Boolean contains(String key);
         Object get(String key);
         void put(String key, Object value);
+        void remove(String key);
     }
 
     public interface TransactionCacheable {
+        Boolean contains(String key);
         Object get(String key);
         void put(String key, Object value);
+        void remove(String key);
     }
 
-    public static TransactionCacheable TransactionCache {
-        get {
-            if (TransactionCache == null) {
-                TransactionCache = new ApexTransactionCache();
-            }
-            return  new ApexTransactionCache();
-        }
-        private set;
-    }
-
-    public static PlatformCacheable OrgCache {
-        get {
-            if (OrgCache == null) {
-                OrgCache = new OrgPlatformCache();
-            }
-            return OrgCache;
-        }
-        private set;
-    }
-
-    public static PlatformCacheable SessionCache {
-        get {
-            if (SessionCache == null) {
-                SessionCache = new SessionPlatformCache();
-            }
-            return SessionCache;
-        }
-        private set;
-    }
+    public static TransactionCacheable TransactionCache = new ApexTransactionCache();
+    public static PlatformCacheable OrgCache = new OrgPlatformCache();
+    public static PlatformCacheable SessionCache = new SessionPlatformCache();
 
     // Implementation
-
-    // PlatformCacheConfig =>
-    //     partitionA => {
-    //         ttl: 3600,
-    //         cacheVisibility: Cache.Visibility.ALL,
-    //         cannotBeOverride: true
-    //     },
-    //     partitionB => {
-    //         ttl: 3600,
-    //         cacheVisibility: Cache.Visibility.ALL,
-    //         cannotBeOverride: true
-    //     }
-    // }
-    // if no config save to default partition
-    // throw error that parition config is not provided
-
 
     private CacheManager() {}
 
     // Transaction
 
     private class ApexTransactionCache implements TransactionCacheable {
+        private final Map<String, Object> TRANSACTION_CACHE = new Map<String, Object>();
+
+        public Boolean contains(String key) {
+            return this.TRANSACTION_CACHE.containsKey(key);
+        }
+
         public Object get(String key) {
-            return null;
+            return this.TRANSACTION_CACHE.get(key);
         }
 
         public void put(String key, Object value) {
+            this.TRANSACTION_CACHE.put(key, value);
+        }
 
+        public void remove(String key) {
+            this.TRANSACTION_CACHE.remove(key);
         }
     }
 
     // Platform Cache
 
-    private static final Map<String, PlatformCacheConfig> PARTITION_CONFIGURATION = new Map<String, PlatformCacheConfig>{
-        'partitionA' => new PlatformCacheConfig().orgCacheTimeToLive(86400).sessionCacheTimeToLive(28800),
-        'partitionB' => new PlatformCacheConfig().orgCacheTimeToLive(86400).sessionCacheTimeToLive(28800)
-    };
-
-    private class PlatformCacheConfig {
-        public Integer sessionCacheTimeToLive = 28800;
-        public Integer orgCacheTimeToLive = 86400;
-        public Boolean isCacheImmutable = false;
-        public Cache.Visibility cacheVisibility = Cache.Visibility.ALL;
-
-        public PlatformCacheConfig orgCacheTimeToLive(Integer timeToLive) {
-            this.orgCacheTimeToLive = timeToLive;
-            return this;
-        }
-
-        public PlatformCacheConfig sessionCacheTimeToLive(Integer timeToLive) {
-            this.sessionCacheTimeToLive = timeToLive;
-            return this;
-        }
-
-        public PlatformCacheConfig cacheVisibility(Cache.Visibility cacheVisibility) {
-            this.cacheVisibility = cacheVisibility;
-            return this;
-        }
-
-        public PlatformCacheConfig cacheImmutable() {
-            this.isCacheImmutable = true;
-            return this;
-        }
-    }
-
     private abstract class PlatformCache implements PlatformCacheable {
         private Cache.Partition platformCachePartition;
+        private CacheConfiguration__mdt configuration;
 
         abstract Cache.Partition getPartition(String partitionName);
 
         public PlatformCacheable partition(String partitionName) {
             this.platformCachePartition = getPartition(partitionName);
+            this.configuration = Schema.CacheConfiguration__mdt.getInstance(partitionName);
             return this;
         }
 
@@ -126,7 +63,7 @@ public with sharing class CacheManager {
         }
 
         public void put(String key, Object value) {
-            this.platformCachePartition?.put(key, value, cacheTtlSeconds, cacheVisiblity, isCacheImmutable);
+            // this.platformCachePartition?.put(key, value, cacheTtlSeconds, cacheVisiblity, isCacheImmutable);
 
         }
     }
