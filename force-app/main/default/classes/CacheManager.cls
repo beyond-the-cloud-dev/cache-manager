@@ -15,6 +15,7 @@ public with sharing class CacheManager {
     }
 
     public final static Cacheable ApexTransaction = new ApexTransactionCache();
+
     public final static Cacheable DefaultOrgCache {
         get { return getOrgCache('Default'); }
     }
@@ -45,8 +46,6 @@ public with sharing class CacheManager {
         }
         return CACHE_MAP.get(CacheType.SESSION).get(partitionName);
     }
-
-    private CacheManager() {}
 
     private static void validateKey(String key) {
         if (!Pattern.compile('^[a-zA-Z0-9]+$').matcher(key).matches()) {
@@ -94,7 +93,7 @@ public with sharing class CacheManager {
             this.configuration = Schema.CacheConfiguration__mdt.getInstance(this.partitionName);
 
             if (this.configuration == null) {
-               // throw new CacheManager.PlatformCacheException('Cache Configuration not found for the partition \'' + partitionName + '\'');
+                throw new MissingCacheConfigurationException('Cache Configuration not found for the partition \'' + partitionName + '\'');
             }
         }
 
@@ -158,4 +157,6 @@ public with sharing class CacheManager {
             }
         }
     }
+
+    private class MissingCacheConfigurationException extends Exception {}
 }

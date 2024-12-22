@@ -69,6 +69,21 @@ private class CacheManagerTest {
     }
 
     @IsTest
+    static void apexTransactionInvalidKey() {
+        IllegalArgumentException keyException = null;
+
+        // Test
+        try {
+            CacheManager.ApexTransaction.put('Test Key', 'Test Value');
+        } catch (IllegalArgumentException e) {
+            keyException = e;
+        }
+
+        // Verify
+        Assert.isNotNull(keyException, 'Exception should be thrown for not alphanumeric key.');
+    }
+
+    @IsTest
     static void orgCacheContains() {
         // Setup
         CacheManager.DefaultOrgCache.put('TestKey', 'Test Value');
@@ -128,6 +143,21 @@ private class CacheManagerTest {
     }
 
     @IsTest
+    static void orgCacheInvalidKey() {
+        IllegalArgumentException keyException = null;
+
+        // Test
+        try {
+            CacheManager.DefaultOrgCache.put('Test Key', 'Test Value');
+        } catch (IllegalArgumentException e) {
+            keyException = e;
+        }
+
+        // Verify
+        Assert.isNotNull(keyException, 'Exception should be thrown for not alphanumeric key.');
+    }
+
+    @IsTest
     static void sessionCacheContains() {
         // Setup
         CacheManager.DefaultSessionCache.put('TestKey', 'Test Value');
@@ -184,5 +214,20 @@ private class CacheManagerTest {
        // Verify
        Assert.isTrue(keys.contains('TestKey'), 'Key should exist.');
        Assert.isTrue(keys.contains('TestKey2'), 'Key should exist.');
+    }
+
+    @IsTest
+    static void sessionCacheInvalidKey() {
+        IllegalArgumentException keyException = null;
+
+        // Test
+        try {
+            CacheManager.DefaultSessionCache.put('Test Key', 'Test Value');
+        } catch (IllegalArgumentException e) {
+            keyException = e;
+        }
+
+        // Verify
+        Assert.isNotNull(keyException, 'Exception should be thrown for not alphanumeric key.');
     }
 }
