@@ -7,8 +7,6 @@
 **/
 @IsTest
 private class CacheManagerTest {
-    private static final String CACHE_KEY = 'TestKey';
-
     @IsTest
     static void apexTransactionContains() {
         // Setup

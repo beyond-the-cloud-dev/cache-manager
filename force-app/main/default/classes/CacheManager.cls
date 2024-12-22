@@ -129,6 +129,4 @@ public with sharing class CacheManager {
             return Cache.Session.getPartition(partitionName);
         }
     }
-
-    private class MissingCacheConfigurationException extends Exception {}
 }
