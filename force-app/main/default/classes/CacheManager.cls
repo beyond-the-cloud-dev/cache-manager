@@ -14,8 +14,8 @@ public with sharing class CacheManager {
     }
 
     public final static Cacheable ApexTransaction = new ApexTransactionCache();
-    public final static Cacheable SOQLOrg = getOrgCache('SOQL');
-    public final static Cacheable SOQLSession = getSessionCache('SOQL');
+    // public final static Cacheable SOQLOrg = getOrgCache('SOQL');
+    // public final static Cacheable SOQLSession = getSessionCache('SOQL');
     // more cache partitions here
 
     private enum CacheType { ORG, SESSION }
@@ -136,12 +136,3 @@ public with sharing class CacheManager {
         }
     }
 }
-/*
-0. Metadata (optional)
-1. Different partition should be supported.
-2. PlatformCacheable and TransactionCacheable should have different methods. eg. ttl does not apply to TransactionCacheable
-*/
-
-
-// CacheManager.OrgCache.partition('SOQL').put('Account', [SELECT Id FROM Account]);
-// CacheManager.TransactionCacheable.put('Account', [SELECT Id FROM Account]);
