@@ -9,6 +9,7 @@ public with sharing class CacheManager {
     public interface Cacheable {
         Boolean contains(String key);
         Object get(String key);
+        Set<String> getKeys();
         void put(String key, Object value);
         void remove(String key);
     }
@@ -48,6 +49,10 @@ public with sharing class CacheManager {
 
         public Boolean contains(String key) {
             return this.TRANSACTION_CACHE.containsKey(key);
+        }
+
+        public Set<String> getKeys() {
+            return TRANSACTION_CACHE.keySet();
         }
 
         public Object get(String key) {
@@ -95,6 +100,10 @@ public with sharing class CacheManager {
 
         public Boolean contains(String key) {
             return this.platformCachePartition.contains(key);
+        }
+
+        public Set<String> getKeys() {
+            return this.platformCachePartition.getKeys();
         }
 
         public Object get(String key) {

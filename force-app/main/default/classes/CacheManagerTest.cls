@@ -51,4 +51,18 @@ private class CacheManagerTest {
         // Verify
         Assert.areEqual(null, CacheManager.ApexTransaction.get('Test Key'), 'Cached value should not exist.');
     }
+
+    @IsTest
+    static void apexTransactionGetKeys() {
+        // Setup
+        CacheManager.ApexTransaction.put('Test Key', 'Test Value');
+        CacheManager.ApexTransaction.put('Test Key 2', 'Test Value 2');
+
+        // Test
+        Set<String> keys = CacheManager.ApexTransaction.getKeys();
+
+        // Verify
+        Assert.isTrue(keys.contains('Test Key'), 'Key should exist.');
+        Assert.isTrue(keys.contains('Test Key 2'), 'Key should exist.');
+    }
 }
