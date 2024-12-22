@@ -80,11 +80,9 @@ public with sharing class CacheManager {
     }
 
     private abstract class PlatformCache implements Cacheable {
-        private CacheConfiguration__mdt configuration;
         private Cache.Partition platformCachePartition;
 
         public PlatformCache(String partitionName) {
-            this.configuration = Schema.CacheConfiguration__mdt.getInstance(partitionName);
             this.platformCachePartition = getPartition(partitionName);
         }
 
@@ -99,7 +97,7 @@ public with sharing class CacheManager {
         }
 
         public Object get(String key) {
-            return this.platformCachePartition?.get(key);
+            return this.platformCachePartition.get(key);
         }
 
         public void remove(String key) {
@@ -108,14 +106,7 @@ public with sharing class CacheManager {
 
         public void put(String key, Object value) {
             validateKey(key);
-
-            this.platformCachePartition?.put(
-                key,
-                value,
-                Integer.valueOf(this.configuration.OrgCacheTimeToLive__c),
-                Cache.Visibility.valueOf(this.configuration.Visibility__c.toUpperCase()),
-                this.configuration.IsCacheImmutable__c
-            );
+            this.platformCachePartition.put(key, value);
         }
     }
 
