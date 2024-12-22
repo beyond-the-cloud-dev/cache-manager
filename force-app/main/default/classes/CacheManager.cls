@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) 2025 BEYOND THE CLOUD Sp. z o.o. (BeyondTheCloud.Dev)
+ * Licensed under the MIT License (https://github.com/beyond-the-cloud-dev/cache-manager/blob/main/LICENSE)
+ *
+ * PMD False Positives:
+ * TBD
+**/
 public with sharing class CacheManager {
     public interface Cacheable {
         Boolean contains(String key);
@@ -9,6 +16,7 @@ public with sharing class CacheManager {
     public final static Cacheable ApexTransaction = new ApexTransactionCache();
     public final static Cacheable SOQLOrg = getOrgCache('SOQL');
     public final static Cacheable SOQLSession = getSessionCache('SOQL');
+    // more cache partitions here
 
     private enum CacheType { ORG, SESSION }
 
@@ -86,7 +94,7 @@ public with sharing class CacheManager {
         abstract Cache.Partition getPartition();
 
         public Boolean contains(String key) {
-            return false;
+            return this.platformCachePartition.contains(key);
         }
 
         public Object get(String key) {
