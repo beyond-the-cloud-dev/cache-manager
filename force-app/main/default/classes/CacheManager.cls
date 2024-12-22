@@ -15,34 +15,44 @@ public with sharing class CacheManager {
     }
 
     public final static Cacheable ApexTransaction = new ApexTransactionCache();
-    // public final static Cacheable SOQLOrg = getOrgCache('SOQL');
-    // public final static Cacheable SOQLSession = getSessionCache('SOQL');
+    public final static Cacheable DefaultOrgCache {
+        get { return getOrgCache('Default'); }
+    }
+    public final static Cacheable DefaultSessionCache {
+        get { return getSessionCache('Default'); }
+    }
     // more cache partitions here
+
+    // Implementation
 
     private enum CacheType { ORG, SESSION }
 
-    private static final Map<CacheType, Map<String, Cacheable>> CACHEABLE = new Map<CacheType, Map<String, Cacheable>>{
+    private final static Map<CacheType, Map<String, Cacheable>> CACHE_MAP = new Map<CacheType, Map<String, Cacheable>>{
         CacheType.ORG => new Map<String, Cacheable>(),
         CacheType.SESSION => new Map<String, Cacheable>()
     };
 
     private static Cacheable getOrgCache(String partitionName) {
-        if (!CACHEABLE.get(CacheType.ORG).containsKey(partitionName)) {
-            CACHEABLE.get(CacheType.ORG).put(partitionName, new OrgPlatformCache(partitionName));
+        if (!CACHE_MAP.get(CacheType.ORG).containsKey(partitionName)) {
+            CACHE_MAP.get(CacheType.ORG).put(partitionName, new OrgPlatformCache(partitionName));
         }
-        return CACHEABLE.get(CacheType.ORG).get(partitionName);
+        return CACHE_MAP.get(CacheType.ORG).get(partitionName);
     }
 
     private static Cacheable getSessionCache(String partitionName) {
-        if (!CACHEABLE.get(CacheType.SESSION).containsKey(partitionName)) {
-            CACHEABLE.get(CacheType.SESSION).put(partitionName, new SessionPlatformCache(partitionName));
+        if (!CACHE_MAP.get(CacheType.SESSION).containsKey(partitionName)) {
+            CACHE_MAP.get(CacheType.SESSION).put(partitionName, new SessionPlatformCache(partitionName));
         }
-        return CACHEABLE.get(CacheType.SESSION).get(partitionName);
+        return CACHE_MAP.get(CacheType.SESSION).get(partitionName);
     }
 
-    // Implementation
-
     private CacheManager() {}
+
+    private static void validateKey(String key) {
+        if (!Pattern.compile('^[a-zA-Z0-9]+$').matcher(key).matches()) {
+            throw new IllegalArgumentException('Key must be alphanumeric, received key: ' + key);
+        }
+    }
 
     private class ApexTransactionCache implements Cacheable {
         private final Map<String, Object> TRANSACTION_CACHE = new Map<String, Object>();
@@ -60,6 +70,7 @@ public with sharing class CacheManager {
         }
 
         public void put(String key, Object value) {
+            validateKey(key);
             this.TRANSACTION_CACHE.put(key, value);
         }
 
@@ -76,23 +87,14 @@ public with sharing class CacheManager {
         public PlatformCache(String partitionName) {
             this.partitionName = partitionName;
             this.setCacheConfiguration();
-            this.setCachePartition();
+            this.platformCachePartition = getPartition();
         }
 
         private void setCacheConfiguration() {
             this.configuration = Schema.CacheConfiguration__mdt.getInstance(this.partitionName);
+
             if (this.configuration == null) {
                // throw new CacheManager.PlatformCacheException('Cache Configuration not found for the partition \'' + partitionName + '\'');
-            }
-        }
-
-        private void setCachePartition() {
-            try {
-                this.platformCachePartition = getPartition();
-            }  catch (Cache.Org.OrgCacheException orgCacheException) {
-                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
-            } catch (Cache.Session.SessionCacheException sessionCacheException) {
-                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
             }
         }
 
@@ -115,6 +117,8 @@ public with sharing class CacheManager {
         }
 
         public void put(String key, Object value) {
+            validateKey(key);
+
             this.platformCachePartition?.put(
                 key,
                 value,
@@ -131,7 +135,12 @@ public with sharing class CacheManager {
         }
 
         public override Cache.Partition getPartition() {
-            return Cache.Org.getPartition(this.partitionName);
+            try {
+                return Cache.Org.getPartition(this.partitionName);
+            }  catch (Cache.Org.OrgCacheException orgCacheException) {
+                return null;
+                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
+            }
         }
     }
 
@@ -141,7 +150,12 @@ public with sharing class CacheManager {
         }
 
         public override Cache.Partition getPartition() {
-            return Cache.Session.getPartition(this.partitionName);
+            try {
+                return Cache.Session.getPartition(this.partitionName);
+            }  catch (Cache.Session.SessionCacheException orgCacheException) {
+                return null;
+                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
+            }
         }
     }
 }
