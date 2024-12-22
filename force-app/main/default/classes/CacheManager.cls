@@ -8,8 +8,8 @@
 public with sharing class CacheManager {
     public interface Cacheable {
         Boolean contains(String key);
-        Object get(String key);
         Set<String> getKeys();
+        Object get(String key);
         void put(String key, Object value);
         void remove(String key);
     }
@@ -19,6 +19,7 @@ public with sharing class CacheManager {
     public final static Cacheable DefaultOrgCache {
         get { return getOrgCache('Default'); }
     }
+
     public final static Cacheable DefaultSessionCache {
         get { return getSessionCache('Default'); }
     }
@@ -79,25 +80,15 @@ public with sharing class CacheManager {
     }
 
     private abstract class PlatformCache implements Cacheable {
-        private Cache.Partition platformCachePartition;
         private CacheConfiguration__mdt configuration;
-        private String partitionName;
+        private Cache.Partition platformCachePartition;
 
         public PlatformCache(String partitionName) {
-            this.partitionName = partitionName;
-            this.setCacheConfiguration();
-            this.platformCachePartition = getPartition();
+            this.configuration = Schema.CacheConfiguration__mdt.getInstance(partitionName);
+            this.platformCachePartition = getPartition(partitionName);
         }
 
-        private void setCacheConfiguration() {
-            this.configuration = Schema.CacheConfiguration__mdt.getInstance(this.partitionName);
-
-            if (this.configuration == null) {
-                throw new MissingCacheConfigurationException('Cache Configuration not found for the partition \'' + partitionName + '\'');
-            }
-        }
-
-        abstract Cache.Partition getPartition();
+        protected abstract Cache.Partition getPartition(String partitionName);
 
         public Boolean contains(String key) {
             return this.platformCachePartition.contains(key);
@@ -121,7 +112,7 @@ public with sharing class CacheManager {
             this.platformCachePartition?.put(
                 key,
                 value,
-                1000,
+                Integer.valueOf(this.configuration.OrgCacheTimeToLive__c),
                 Cache.Visibility.valueOf(this.configuration.Visibility__c.toUpperCase()),
                 this.configuration.IsCacheImmutable__c
             );
@@ -133,13 +124,8 @@ public with sharing class CacheManager {
             super(partitionName);
         }
 
-        public override Cache.Partition getPartition() {
-            try {
-                return Cache.Org.getPartition(this.partitionName);
-            }  catch (Cache.Org.OrgCacheException orgCacheException) {
-                return null;
-                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
-            }
+        public override Cache.Partition getPartition(String partitionName) {
+            return Cache.Org.getPartition(partitionName);
         }
     }
 
@@ -148,13 +134,8 @@ public with sharing class CacheManager {
             super(partitionName);
         }
 
-        public override Cache.Partition getPartition() {
-            try {
-                return Cache.Session.getPartition(this.partitionName);
-            }  catch (Cache.Session.SessionCacheException orgCacheException) {
-                return null;
-                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
-            }
+        public override Cache.Partition getPartition(String partitionName) {
+            return Cache.Session.getPartition(partitionName);
         }
     }
 
