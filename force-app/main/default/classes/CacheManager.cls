@@ -1,30 +1,41 @@
 public with sharing class CacheManager {
-    public interface PlatformCacheable {
-        PlatformCacheable partition(String partitionName);
+    public interface Cacheable {
         Boolean contains(String key);
         Object get(String key);
         void put(String key, Object value);
         void remove(String key);
     }
 
-    public interface TransactionCacheable {
-        Boolean contains(String key);
-        Object get(String key);
-        void put(String key, Object value);
-        void remove(String key);
+    public final static Cacheable ApexTransaction = new ApexTransactionCache();
+    public final static Cacheable SOQLOrg = getOrgCache('SOQL');
+    public final static Cacheable SOQLSession = getSessionCache('SOQL');
+
+    private enum CacheType { ORG, SESSION }
+
+    private static final Map<CacheType, Map<String, Cacheable>> CACHEABLE = new Map<CacheType, Map<String, Cacheable>>{
+        CacheType.ORG => new Map<String, Cacheable>(),
+        CacheType.SESSION => new Map<String, Cacheable>()
+    };
+
+    private static Cacheable getOrgCache(String partitionName) {
+        if (!CACHEABLE.get(CacheType.ORG).containsKey(partitionName)) {
+            CACHEABLE.get(CacheType.ORG).put(partitionName, new OrgPlatformCache(partitionName));
+        }
+        return CACHEABLE.get(CacheType.ORG).get(partitionName);
     }
 
-    public static TransactionCacheable TransactionCache = new ApexTransactionCache();
-    public static PlatformCacheable OrgCache = new OrgPlatformCache();
-    public static PlatformCacheable SessionCache = new SessionPlatformCache();
+    private static Cacheable getSessionCache(String partitionName) {
+        if (!CACHEABLE.get(CacheType.SESSION).containsKey(partitionName)) {
+            CACHEABLE.get(CacheType.SESSION).put(partitionName, new SessionPlatformCache(partitionName));
+        }
+        return CACHEABLE.get(CacheType.SESSION).get(partitionName);
+    }
 
     // Implementation
 
     private CacheManager() {}
 
-    // Transaction
-
-    private class ApexTransactionCache implements TransactionCacheable {
+    private class ApexTransactionCache implements Cacheable {
         private final Map<String, Object> TRANSACTION_CACHE = new Map<String, Object>();
 
         public Boolean contains(String key) {
@@ -44,50 +55,79 @@ public with sharing class CacheManager {
         }
     }
 
-    // Platform Cache
-
-    private abstract class PlatformCache implements PlatformCacheable {
+    private abstract class PlatformCache implements Cacheable {
         private Cache.Partition platformCachePartition;
         private CacheConfiguration__mdt configuration;
+        private String partitionName;
 
-        abstract Cache.Partition getPartition(String partitionName);
+        public PlatformCache(String partitionName) {
+            this.partitionName = partitionName;
+            this.setCacheConfiguration();
+            this.setCachePartition();
+        }
 
-        public PlatformCacheable partition(String partitionName) {
-            this.platformCachePartition = getPartition(partitionName);
-            this.configuration = Schema.CacheConfiguration__mdt.getInstance(partitionName);
-            return this;
+        private void setCacheConfiguration() {
+            this.configuration = Schema.CacheConfiguration__mdt.getInstance(this.partitionName);
+            if (this.configuration == null) {
+               // throw new CacheManager.PlatformCacheException('Cache Configuration not found for the partition \'' + partitionName + '\'');
+            }
+        }
+
+        private void setCachePartition() {
+            try {
+                this.platformCachePartition = getPartition();
+            }  catch (Cache.Org.OrgCacheException orgCacheException) {
+                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
+            } catch (Cache.Session.SessionCacheException sessionCacheException) {
+                // No-op if the partition can't be found - the rest of the code will fallback to using the transaction cache
+            }
+        }
+
+        abstract Cache.Partition getPartition();
+
+        public Boolean contains(String key) {
+            return false;
         }
 
         public Object get(String key) {
             return this.platformCachePartition?.get(key);
         }
 
-        public void put(String key, Object value) {
-            // this.platformCachePartition?.put(key, value, cacheTtlSeconds, cacheVisiblity, isCacheImmutable);
+        public void remove(String key) {
+            this.platformCachePartition.remove(key);
+        }
 
+        public void put(String key, Object value) {
+            this.platformCachePartition?.put(
+                key,
+                value,
+                1000,
+                Cache.Visibility.valueOf(this.configuration.Visibility__c.toUpperCase()),
+                this.configuration.IsCacheImmutable__c
+            );
         }
     }
 
     private class OrgPlatformCache extends PlatformCache {
-        public override Cache.Partition getPartition(String partitionName) {
-            return Cache.Org.getPartition(partitionName);
+        public OrgPlatformCache(String partitionName) {
+            super(partitionName);
+        }
+
+        public override Cache.Partition getPartition() {
+            return Cache.Org.getPartition(this.partitionName);
         }
     }
 
     private class SessionPlatformCache extends PlatformCache {
-        public override Cache.Partition getPartition(String partitionName) {
-            return Cache.Session.getPartition(partitionName);
+        public SessionPlatformCache(String partitionName) {
+            super(partitionName);
+        }
+
+        public override Cache.Partition getPartition() {
+            return Cache.Session.getPartition(this.partitionName);
         }
     }
 }
-
-// CacheManager.organizationCache().put('myKey', 'myValue', 3600);
-// CacheManager.organizationCache().get('myKey');
-// CacheManager.organizationCache().remove('myKey');
-// CacheManager.organizationCache().contains('myKey');
-
-// CacheManager.TransactionCache.put('Account', [SELECT Id, Name FROM Account]);
-
 /*
 0. Metadata (optional)
 1. Different partition should be supported.

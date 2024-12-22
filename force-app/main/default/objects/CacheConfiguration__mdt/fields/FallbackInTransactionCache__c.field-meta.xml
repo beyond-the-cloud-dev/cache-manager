@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>PartitionName__c</fullName>
+    <fullName>FallbackInTransactionCache__c</fullName>
+    <defaultValue>true</defaultValue>
     <externalId>false</externalId>
     <fieldManageability>DeveloperControlled</fieldManageability>
-    <label>Partition Name</label>
-    <length>255</length>
-    <required>true</required>
-    <type>Text</type>
-    <unique>false</unique>
+    <label>Fallback In Transaction Cache</label>
+    <type>Checkbox</type>
 </CustomField>
