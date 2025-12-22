@@ -4,6 +4,22 @@ export default defineConfig({
   title: "Cache Manager",
   description: "Simplified interface for Salesforce Platform Cache",
   base: '/',
+  head: [
+    ["link", { rel: "icon", href: "/favicon.ico" }],
+    // TODO: Configure Google Tag Manager
+    // [
+    //   'script',
+    //   { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=YOUR-GTM-ID' }
+    // ],
+    // [
+    //   'script',
+    //   {},
+    //   `window.dataLayer = window.dataLayer || [];
+    //   function gtag(){dataLayer.push(arguments);}
+    //   gtag('js', new Date());
+    //   gtag('config', 'YOUR-GTM-ID');`
+    // ]
+  ],
   themeConfig: {
     logo: '/logo.png',
 
