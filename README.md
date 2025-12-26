@@ -8,11 +8,12 @@
   <h1>Cache Manager</h1>
 
 <a href="https://beyondthecloud.dev"><img alt="Beyond The Cloud logo" src="https://img.shields.io/badge/MADE_BY_BEYOND_THE_CLOUD-555?style=for-the-badge"></a>
-<a ><img alt="API version" src="https://img.shields.io/badge/api-v57.0-blue?style=for-the-badge"></a>
-<a href="https://github.com/beyond-the-cloud-dev/cache-manager/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-mit-green?style=for-the-badge"></a>
 
-[![CI](https://github.com/beyond-the-cloud-dev/cache-manager/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/beyond-the-cloud-dev/cache-manager/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/beyond-the-cloud-dev/cache-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/beyond-the-cloud-dev/cache-manager)
+<img alt="API version" src="https://img.shields.io/badge/api-v65.0-blue?style=for-the-badge">
+<a href="https://github.com/beyond-the-cloud-dev/soql-lib/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-mit-green?style=for-the-badge"></a>
+<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/beyond-the-cloud-dev/cache-manager?style=for-the-badge&logo=github&color=blue">
+<img alt="GitHub Release" src="https://img.shields.io/github/v/release/beyond-the-cloud-dev/cache-manager?display_name=tag&style=for-the-badge&color=blue">
+<img alt="Codecov" src="https://img.shields.io/codecov/c/github/beyond-the-cloud-dev/cache-manager?style=for-the-badge">
 </div>
 
 ```java
