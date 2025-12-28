@@ -2,7 +2,7 @@
   <a href="https://apexfluently.beyondthecloud.dev/libraries/cache-manager.html">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="./website/public/logo.png">
-      <img alt="Async Lib logo" src="./website/public/logo.png" height="98">
+      <img alt="Cache Manager logo" src="./website/public/logo.png" height="98">
     </picture>
   </a>
   <h1>Cache Manager</h1>
