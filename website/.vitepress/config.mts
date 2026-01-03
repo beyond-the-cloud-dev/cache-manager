@@ -59,10 +59,7 @@ export default defineConfig({
       { icon: 'github', link: 'https://github.com/beyond-the-cloud-dev/cache-manager' }
     ],
 
-    footer: {
-      message: 'Part of <a href="https://apexfluently.beyondthecloud.dev">Apex Fluently</a>',
-      copyright: 'Copyright © 2024 <a href="https://beyondthecloud.dev">Beyond the Cloud</a>'
-    },
+    footer: false,
 
     search: {
       provider: 'local'
