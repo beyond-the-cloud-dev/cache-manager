@@ -2,6 +2,8 @@
  * Copyright (c) 2025 Beyond The Cloud Sp. z o.o. (BeyondTheCloud.Dev)
  * Licensed under the MIT License (https://github.com/beyond-the-cloud-dev/cache-manager/blob/main/LICENSE)
  *
+ * v1.1.0
+ *
  * PMD False Positives:
  * - CognitiveComplexity: It is a library and we tried to put everything into ONE class
  * - PropertyNamingConventions: It was intentional to make the lib more fluent and readable
@@ -84,6 +86,7 @@ public with sharing class CacheManager {
 
     private abstract class PlatformCache implements Cacheable {
         private Cache.Partition platformCachePartition;
+        private Cacheable fallback = new ApexTransactionCache();
 
         public PlatformCache(String partitionName) {
             this.platformCachePartition = getPartition(partitionName);
@@ -92,24 +95,39 @@ public with sharing class CacheManager {
         protected abstract Cache.Partition getPartition(String partitionName);
 
         public Boolean contains(String key) {
-            return this.platformCachePartition.contains(key);
+            return this.isAvailable() ? this.platformCachePartition.contains(key) : this.fallback.contains(key);
         }
 
         public Set<String> getKeys() {
-            return this.platformCachePartition.getKeys();
+            return this.isAvailable() ? this.platformCachePartition.getKeys() : this.fallback.getKeys();
         }
 
         public Object get(String key) {
-            return this.platformCachePartition.get(key);
+            return this.isAvailable() ? this.platformCachePartition.get(key) : this.fallback.get(key);
         }
 
         public void remove(String key) {
-            this.platformCachePartition.remove(key);
+            if (this.isAvailable()) {
+                this.platformCachePartition.remove(key);
+                return;
+            }
+
+            this.fallback.remove(key);
         }
 
         public void put(String key, Object value) {
             validateKey(key);
-            this.platformCachePartition.put(key, value);
+
+            if (this.isAvailable()) {
+                this.platformCachePartition.put(key, value);
+                return;
+            }
+
+            this.fallback.put(key, value);
+        }
+
+        private Boolean isAvailable() {
+            return this.platformCachePartition != null;
         }
     }
 
@@ -119,7 +137,11 @@ public with sharing class CacheManager {
         }
 
         public override Cache.Partition getPartition(String partitionName) {
-            return Cache.Org.getPartition(partitionName);
+            try {
+                return Cache.Org.getPartition(partitionName);
+            } catch (Cache.Org.OrgCacheException e) {
+                return null;
+            }
         }
     }
 
@@ -129,7 +151,14 @@ public with sharing class CacheManager {
         }
 
         public override Cache.Partition getPartition(String partitionName) {
-            return Cache.Session.getPartition(partitionName);
+            if (!Cache.Session.isAvailable()) {
+                return null;
+            }
+            try {
+                return Cache.Session.getPartition(partitionName);
+            } catch (Cache.Session.SessionCacheException e) {
+                return null;
+            }
         }
     }
 }
