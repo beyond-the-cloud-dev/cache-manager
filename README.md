@@ -16,6 +16,8 @@
 <img alt="Codecov" src="https://img.shields.io/codecov/c/github/beyond-the-cloud-dev/cache-manager?style=for-the-badge">
 </div>
 
+# Getting Started
+
 ```java
 CacheManager.ApexTransaction.put(
     UserInfo.getUserId(),
