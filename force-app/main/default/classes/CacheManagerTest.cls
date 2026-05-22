@@ -41,6 +41,18 @@ private class CacheManagerTest {
     }
 
     @IsTest
+    static void apexTransactionPutOverwrite() {
+        // Setup
+        CacheManager.ApexTransaction.put('TestKey', 'Test Value');
+
+        // Test
+        CacheManager.ApexTransaction.put('TestKey', 'Updated Value');
+
+        // Verify
+        Assert.areEqual('Updated Value', (String) CacheManager.ApexTransaction.get('TestKey'), 'Cached value should be overwritten.');
+    }
+
+    @IsTest
     static void apexTransactionRemove() {
         // Setup
         CacheManager.ApexTransaction.put('TestKey', 'Test Value');
@@ -115,6 +127,18 @@ private class CacheManagerTest {
     }
 
     @IsTest
+    static void orgCachePutOverwrite() {
+        // Setup
+        CacheManager.DefaultOrgCache.put('TestKey', 'Test Value');
+
+        // Test
+        CacheManager.DefaultOrgCache.put('TestKey', 'Updated Value');
+
+        // Verify
+        Assert.areEqual('Updated Value', (String) CacheManager.DefaultOrgCache.get('TestKey'), 'Cached value should be overwritten.');
+    }
+
+    @IsTest
     static void orgCacheRemove() {
         // Setup
         CacheManager.DefaultOrgCache.put('TestKey', 'Test Value');
@@ -186,6 +210,18 @@ private class CacheManagerTest {
 
         // Verify
         Assert.areEqual('Test Value', (String) CacheManager.DefaultSessionCache.get('TestKey'), 'Cached value should be the same');
+    }
+
+    @IsTest
+    static void sessionCachePutOverwrite() {
+        // Setup
+        CacheManager.DefaultSessionCache.put('TestKey', 'Test Value');
+
+        // Test
+        CacheManager.DefaultSessionCache.put('TestKey', 'Updated Value');
+
+        // Verify
+        Assert.areEqual('Updated Value', (String) CacheManager.DefaultSessionCache.get('TestKey'), 'Cached value should be overwritten.');
     }
 
     @IsTest

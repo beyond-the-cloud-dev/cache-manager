@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Beyond The Cloud Sp. z o.o. (BeyondTheCloud.Dev)
+ * Copyright (c) 2026 Beyond The Cloud Sp. z o.o. (BeyondTheCloud.Dev)
  * Licensed under the MIT License (https://github.com/beyond-the-cloud-dev/cache-manager/blob/main/LICENSE)
  *
  * v1.1.0
@@ -8,7 +8,7 @@
  * - CognitiveComplexity: It is a library and we tried to put everything into ONE class
  * - PropertyNamingConventions: It was intentional to make the lib more fluent and readable
  * - FieldNamingConventions: It was intentional to make the lib more fluent and readable
-**/
+ **/
 @SuppressWarnings('PMD.CognitiveComplexity, PMD.PropertyNamingConventions, PMD.FieldNamingConventions')
 public with sharing class CacheManager {
     public interface Cacheable {
@@ -22,17 +22,25 @@ public with sharing class CacheManager {
     public final static Cacheable ApexTransaction = new ApexTransactionCache();
 
     public final static Cacheable DefaultOrgCache {
-        get { return getOrgCache('Default'); }
+        get {
+            return getOrgCache('Default');
+        }
     }
 
     public final static Cacheable DefaultSessionCache {
-        get { return getSessionCache('Default'); }
+        get {
+            return getSessionCache('Default');
+        }
     }
+
     // more cache partitions here
 
     // Implementation
 
-    private enum CacheType { ORG, SESSION }
+    private enum CacheType {
+        ORG,
+        SESSION
+    }
 
     private final static Map<CacheType, Map<String, Cacheable>> CACHE_MAP = new Map<CacheType, Map<String, Cacheable>>{
         CacheType.ORG => new Map<String, Cacheable>(),
@@ -95,15 +103,24 @@ public with sharing class CacheManager {
         protected abstract Cache.Partition getPartition(String partitionName);
 
         public Boolean contains(String key) {
-            return this.isAvailable() ? this.platformCachePartition.contains(key) : this.fallback.contains(key);
+            if (this.isAvailable()) {
+                return this.platformCachePartition.contains(key);
+            }
+            return this.fallback.contains(key);
         }
 
         public Set<String> getKeys() {
-            return this.isAvailable() ? this.platformCachePartition.getKeys() : this.fallback.getKeys();
+            if (this.isAvailable()) {
+                return this.platformCachePartition.getKeys();
+            }
+            return this.fallback.getKeys();
         }
 
         public Object get(String key) {
-            return this.isAvailable() ? this.platformCachePartition.get(key) : this.fallback.get(key);
+            if (this.isAvailable()) {
+                return this.platformCachePartition.get(key);
+            }
+            return this.fallback.get(key);
         }
 
         public void remove(String key) {
@@ -138,7 +155,13 @@ public with sharing class CacheManager {
 
         public override Cache.Partition getPartition(String partitionName) {
             try {
-                return Cache.Org.getPartition(partitionName);
+                Cache.OrgPartition partition = Cache.Org.getPartition(partitionName);
+
+                if (partition.getCapacity() == 0) {
+                    return null;
+                }
+
+                return partition;
             } catch (Cache.Org.OrgCacheException e) {
                 return null;
             }
@@ -155,7 +178,14 @@ public with sharing class CacheManager {
                 if (!Cache.Session.isAvailable()) {
                     return null;
                 }
-                return Cache.Session.getPartition(partitionName);
+
+                Cache.SessionPartition partition = Cache.Session.getPartition(partitionName);
+
+                if (partition.getCapacity() == 0) {
+                    return null;
+                }
+
+                return partition;
             } catch (Cache.Session.SessionCacheException e) {
                 return null;
             }
