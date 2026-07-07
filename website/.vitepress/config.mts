@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
+  cleanUrls: true,
   title: "Cache Manager",
   description: "Simplified interface for Salesforce Platform Cache",
   base: '/',
