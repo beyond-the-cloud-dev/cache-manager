@@ -148,4 +148,3 @@ Cache Manager is part of [Apex Fluently](https://apexfluently.beyondthecloud.dev
 
 Ready to simplify your caching? [Get started →](/getting-started)
 
-<BTCFooter context="cache-manager" />
