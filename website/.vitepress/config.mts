@@ -44,19 +44,19 @@ export default defineConfig({
         }
       })
     ],
-    // TODO: Configure Google Tag Manager
-    // [
-    //   'script',
-    //   { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=YOUR-GTM-ID' }
-    // ],
-    // [
-    //   'script',
-    //   {},
-    //   `window.dataLayer = window.dataLayer || [];
-    //   function gtag(){dataLayer.push(arguments);}
-    //   gtag('js', new Date());
-    //   gtag('config', 'YOUR-GTM-ID');`
-    // ]
+    // Google Analytics (G-EVMRCQS34V)
+    [
+      'script',
+      { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-EVMRCQS34V' }
+    ],
+    [
+      'script',
+      {},
+      `window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-EVMRCQS34V');`
+    ]
   ],
   sitemap: {
     hostname: siteUrl
